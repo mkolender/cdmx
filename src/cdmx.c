@@ -393,8 +393,8 @@ static ssize_t cld_write(struct tty_struct *tty, struct file *file,
 	return -EINVAL;
 }
 
-int	cld_receive_buf2(struct tty_struct *tty, const unsigned char *cp,
-		char *fp, int count)
+static size_t cld_receive_buf2(struct tty_struct *tty, const u8 *cp,
+		const u8 *fp, size_t count)
 {
 	struct cdmx_port *port = tty->disc_data;
 	struct uart_frame *frame = &port->rx;
@@ -409,22 +409,21 @@ int	cld_receive_buf2(struct tty_struct *tty, const unsigned char *cp,
 	return count;
 }
 
-void cld_set_termios (struct tty_struct *tty, struct ktermios *old)
+static void cld_set_termios (struct tty_struct *tty, const struct ktermios *old)
 {
 //	K_DEBUG("cflags: %X, ispeed: %d", old->c_cflag, old->c_ispeed);
 }
 
-int	cld_ioctl(struct tty_struct *tty, struct file *file,
+int	cld_ioctl(struct tty_struct *tty,
 		 unsigned int cmd, unsigned long arg)
 {
-//	K_DEBUG("tty: %s, cmd: 0x%04X, arg: 0x%lx", tty->name, cmd, arg);
-	return n_tty_ioctl_helper(tty, file, cmd, arg);
+	return n_tty_ioctl_helper(tty, cmd, arg);
 }
 
 static struct tty_ldisc_ops cld_ops =
 {
 	.owner			= THIS_MODULE,
-	.magic			= TTY_LDISC_MAGIC,
+	.num			= CDMX_LD,
 	.name			= "cdmx",
 	.open			= cld_open,
 	.close			= cld_close,
@@ -575,7 +574,7 @@ static struct kobj_type port_ktype =
  * CHARACTER DEVICE
  ******************************************************************************/
 
-static char *cdmx_devnode(struct device *dev, umode_t *mode)
+static char *cdmx_devnode(const struct device *dev, umode_t *mode)
 {
 	if (!mode)
 		return NULL;
@@ -855,7 +854,8 @@ static int cdmx_create_cdevs (void)
 	}
 
 	// Returns &struct class pointer on success, or ERR_PTR() on error.
-	cdmx_devclass = class_create(THIS_MODULE, chrdev_name);
+	cdmx_devclass = class_create(chrdev_name);
+
 	if (IS_ERR(cdmx_devclass))
 	{
 		K_ERR("failed to create class '%s'", chrdev_name);
@@ -978,7 +978,7 @@ static int __init cdmx_init (void)
 	if (err)
 		goto failure2;
 
-	err = tty_register_ldisc(CDMX_LD, &cld_ops);
+	err = tty_register_ldisc(&cld_ops);
 	if (err)
 		goto failure3;
 

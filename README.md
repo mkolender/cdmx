@@ -5,7 +5,7 @@ Linux kernel module that turns any serial tty to DMX port.
 
 Requirements: 
 - h/w support for BREAK detection and non-standard baudrate.
-- Linux kernel v5 (they change API at speed of light, this work done with v5.10.63 LTS)
+- Linux kernel v6 (tested on v6.6.51)
 
 Implemented for now:
 
